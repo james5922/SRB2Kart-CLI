@@ -79,35 +79,62 @@ REM THIS PROGRAM COMES WITH NO WARRANTY, BE IT IMPLIED OR EXPLICIT. USE AT YOUR 
   
   echo If you would like to directly connect to a server, input its IP or web address here.
   echo (ex. tohru.is-very-cute.moe, 173.92.19.113, or tyronesama.moe)
-  echo If you have a LASTSERVER.TXT file, input LAST SERVER (with a space between "LAST" and "SERVER") into the text entry box.
-  set /p lastserver="Input a server IP address, 'LAST SERVER' to connect to the last used Direct Connect server address, or just press ENTER to continue without directly connecting. "
+  set /p lastserver="Input a server IP address or just press ENTER to continue without directly connecting. "
   if "%lastserver%"=="" goto vanilla32-indirect
-  if not "%lastserver%"=="LAST SERVER" copy %lastserver% LASTSERVER.TXT > NUL
+  if not "%lastserver%"=="" goto vanilla32-direct
   
+  :vanilla32-direct
+  echo [DEBUG] vanilla32direct
   cd %x32bitdir%
   choice /M "Use OpenGL? (Y for OpenGL, N for Software)"
-  if ERRORLEVEL 2 start %vanilla32% -openGL -connect %lastserver%
-  if ERRORLEVEL 1 start %vanilla32% -connect %lastserver%
   echo Please wait for the game to start...
+  echo WARNING: Window will appear below this console window!
   echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  if ERRORLEVEL == 2 %vanilla32% -connect %lastserver%
+  if ERRORLEVEL == 1 %vanilla32% -openGL -connect %lastserver%
   goto menu	
+  
   :vanilla32-indirect
+  echo [DEBUG] vanilla32indirect
   cd %x32bitdir%
   choice /M "Use OpenGL? (Y for OpenGL, N for Software)"
-  if ERRORLEVEL 2 start %vanilla32% -openGL
-  if ERRORLEVEL 1 start %vanilla32%
   echo Please wait for the game to start...
+  echo WARNING: Window will appear below this console window!
   echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  if ERRORLEVEL == 2 %vanilla32% 
+  if ERRORLEVEL == 1 %vanilla32% -openGL
   goto menu	
+  
   :vanilla64
   cls
   echo VANILLA, 64-BIT
+  
+  echo If you would like to directly connect to a server, input its IP or web address here.
+  echo (ex. tohru.is-very-cute.moe, 173.92.19.113, or tyronesama.moe)
+  set /p lastserver="Input a server IP address or just press ENTER to continue without directly connecting. "
+  if "%lastserver%"=="" goto vanilla64-indirect
+  if not "%lastserver%"=="" goto vanilla64-direct
+  
+  :vanilla64-direct
+  echo [DEBUG] vanilla64direct
+  cd %x32bitdir%
+  choice /M "Use OpenGL? (Y for OpenGL, N for Software)"
+  echo Please wait for the game to start...
+  echo WARNING: Window will appear below this console window!
+  echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  if ERRORLEVEL == 2 %vanilla64% -connect %lastserver%
+  if ERRORLEVEL == 1 %vanilla64% -openGL -connect %lastserver%
+  goto menu	
+  
+  :vanilla64-indirect
+  echo [DEBUG] vanilla64indirect
   cd %x64bitdir%
   choice /M "Use OpenGL? (Y for OpenGL, N for Software)"
-  if ERRORLEVEL 2 start %vanilla64% -openGL
-  if ERRORLEVEL 1 start %vanilla64%
   echo Please wait for the game to start...
+  echo WARNING: Window will appear below this console window!
   echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  if ERRORLEVEL == 2 %vanilla64%
+  if ERRORLEVEL == 1 %vanilla64% -openGL
   goto menu
   :fkart32
   cls
