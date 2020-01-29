@@ -6,8 +6,11 @@ REM SRB2Kart Copyright (C) 1998-2018 by Kart Krew and Sonic Team Junior
 REM INI file processing code from Batchography book, written by Elias Bachaalany
 REM THIS PROGRAM COMES WITH NO WARRANTY, BE IT IMPLIED OR EXPLICIT. USE AT YOUR OWN RISK.
 
+
+
 :main
   @echo off
+  cls
   echo CONFIGURATION CHECK
   setlocal enabledelayedexpansion
   call :get-ini kartlauncher.ini PATHS VANILLA-X86-PATH vanilla32
@@ -39,6 +42,14 @@ REM THIS PROGRAM COMES WITH NO WARRANTY, BE IT IMPLIED OR EXPLICIT. USE AT YOUR 
   call :get-ini kartlauncher.ini PATHS 64-BIT-DIR x64bitdir
   echo 64-bit (x64) working directory is %x64bitdir%
   choice /N /T 5 /D Y /M "Is this okay?"
+  cls
+  call :get-ini kartlauncher.ini FEATURES HYUUSEEKER-ENABLED hs-enabled
+                     echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  if %hs-enabled%==0 echo                 NOTICE - Experimental HyuuSeeker support is DISABLED.
+  if %hs-enabled%==1 echo                 NOTICE - Experimental HyuuSeeker support is  ENABLED.
+                     echo THIS PROGRAM COMES WITH NO WARRANTY, BE IT IMPLIED OR EXPLICIT. USE AT YOUR OWN RISK.
+                     echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  pause
   
   REM todo: ADD CUSTOM .EXE SUPPORT AT SOME POINT
   cls
@@ -56,7 +67,8 @@ REM THIS PROGRAM COMES WITH NO WARRANTY, BE IT IMPLIED OR EXPLICIT. USE AT YOUR 
   if not "%fornite32%"=="" echo 7: Battle Royale, 32-bit
   if not "%fornite64%"=="" echo 8: Battle Royale, 64-bit
   echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  choice /C:12345678Z /N /M "Choose an executable from the above list, or press Z to stop this program."
+  if "%lsfunction%"=="" choice /C:12345678Z /N /M "Choose an executable from the above list, or press Z to stop this program."
+  if "%lsfunction%"=="1" choice /C:12345678Z /N /M "Choose an executable from the above list, or press Z twice to stop this program."
   if ERRORLEVEL 9 GOTO :eof
   if ERRORLEVEL 8 GOTO br64
   if ERRORLEVEL 7 GOTO br32
@@ -69,58 +81,51 @@ REM THIS PROGRAM COMES WITH NO WARRANTY, BE IT IMPLIED OR EXPLICIT. USE AT YOUR 
   
   REM todo: ADD DIRECT CONNECTING TO SERVERS AT SOME POINT
   REM todo: ADD HYUUSEEKER INTEGRATION AT SOME POINT
-  REM (HyuuSeeker support/integration will probably be tied to direct connecting to servers)
-  REM todo: ADD SUPPORT FOR STARTING OF DEDICATED SERVERS AT SOME POINT
+  REM (HyuuSeeker support will probably be tied to direct connecting to servers)
+  
+  
+  
   
   :vanilla32
   cls
   echo VANILLA, 32-BIT
-  
-  
-  echo If you would like to directly connect to a server, input its IP or web address here.
-  echo (ex. tohru.is-very-cute.moe, 173.92.19.113, or tyronesama.moe)
-  set /p lastserver="Input a server IP address or just press ENTER to continue without directly connecting. "
-  if "%lastserver%"=="" goto vanilla32-indirect
-  if not "%lastserver%"=="" goto vanilla32-direct
+  call :lastserver vanilla32
+  goto menu
   
   :vanilla32-direct
   echo [DEBUG] vanilla32direct
   cd %x32bitdir%
   choice /M "Use OpenGL? (Y for OpenGL, N for Software)"
   echo Please wait for the game to start...
-  echo WARNING: Window will appear below this console window!
+  echo WARNING: Window may appear below this console window!
   echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   if ERRORLEVEL == 2 %vanilla32% -connect %lastserver%
   if ERRORLEVEL == 1 %vanilla32% -openGL -connect %lastserver%
-  goto menu	
+  goto menu
   
   :vanilla32-indirect
   echo [DEBUG] vanilla32indirect
   cd %x32bitdir%
   choice /M "Use OpenGL? (Y for OpenGL, N for Software)"
   echo Please wait for the game to start...
-  echo WARNING: Window will appear below this console window!
+  echo WARNING: Window may appear below this console window!
   echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   if ERRORLEVEL == 2 %vanilla32% 
   if ERRORLEVEL == 1 %vanilla32% -openGL
-  goto menu	
+  goto menu
   
   :vanilla64
   cls
   echo VANILLA, 64-BIT
-  
-  echo If you would like to directly connect to a server, input its IP or web address here.
-  echo (ex. tohru.is-very-cute.moe, 173.92.19.113, or tyronesama.moe)
-  set /p lastserver="Input a server IP address or just press ENTER to continue without directly connecting. "
-  if "%lastserver%"=="" goto vanilla64-indirect
-  if not "%lastserver%"=="" goto vanilla64-direct
+  call :lastserver vanilla64
+  goto menu
   
   :vanilla64-direct
   echo [DEBUG] vanilla64direct
   cd %x32bitdir%
   choice /M "Use OpenGL? (Y for OpenGL, N for Software)"
   echo Please wait for the game to start...
-  echo WARNING: Window will appear below this console window!
+  echo WARNING: Window may appear below this console window!
   echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   if ERRORLEVEL == 2 %vanilla64% -connect %lastserver%
   if ERRORLEVEL == 1 %vanilla64% -openGL -connect %lastserver%
@@ -131,7 +136,7 @@ REM THIS PROGRAM COMES WITH NO WARRANTY, BE IT IMPLIED OR EXPLICIT. USE AT YOUR 
   cd %x64bitdir%
   choice /M "Use OpenGL? (Y for OpenGL, N for Software)"
   echo Please wait for the game to start...
-  echo WARNING: Window will appear below this console window!
+  echo WARNING: Window may appear below this console window!
   echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   if ERRORLEVEL == 2 %vanilla64%
   if ERRORLEVEL == 1 %vanilla64% -openGL
@@ -195,4 +200,12 @@ REM THIS PROGRAM COMES WITH NO WARRANTY, BE IT IMPLIED OR EXPLICIT. USE AT YOUR 
       )
     )
   )
+  endlocal
+  
+:lastserver <version>
+	set lsfunction=1
+  	echo If you would like to directly connect to a server, input its IP or web address here. (ex. tohru.is-very-cute.moe, 173.92.19.113, or tyronesama.moe)
+  	set /p lastserver="Input a server IP address or just press ENTER to continue without directly connecting. "
+  	if "%lastserver%"=="" goto %1-indirect
+  	if not "%lastserver%"=="" goto %1-direct
   endlocal
