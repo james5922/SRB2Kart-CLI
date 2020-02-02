@@ -29,7 +29,10 @@ REM THIS PROGRAM COMES WITH NO WARRANTY, BE IT IMPLIED OR EXPLICIT. USE AT YOUR 
   if not "%vanilla32%"=="" echo 32-bit Kart install is located at %vanilla32%
   
   call :get-ini kartlauncher.ini LAUNCHER VANILLA-X64-PATH vanilla64
-  if "%vanilla64%"=="" echo 64-bit Kart install not found
+  if %cwd-enabled%==1 if "%vanilla64%"=="" echo 64-bit Kart install not found, checking 64-bit working directory...
+  if %cwd-enabled%==0 if "%vanilla64%"=="" echo 64-bit Kart install not found
+  if %cwd-enabled%==1 if exist %x64bitdir%\SRB2KART.EXE set vanilla64=%x64bitdir%\SRB2KART.EXE
+  if %cwd-enabled%==1 if "%vanilla64%"=="" echo 64-bit Kart install still not found
   if not "%vanilla64%"=="" echo 64-bit Kart install is located at %vanilla64%
   
   call :get-ini kartlauncher.ini LAUNCHER FKART-X86-PATH fickart32
@@ -40,7 +43,10 @@ REM THIS PROGRAM COMES WITH NO WARRANTY, BE IT IMPLIED OR EXPLICIT. USE AT YOUR 
   if not "%fickart32%"=="" echo 32-bit FKart install is located at %fickart32%
   
   call :get-ini kartlauncher.ini LAUNCHER FKART-X64-PATH fickart64
-  if "%fickart64%"=="" echo 64-bit FKart install not found
+  if %cwd-enabled%==1 if "%fickart64%"=="" echo 64-bit FKart install not found, checking 64-bit working directory...
+  if %cwd-enabled%==0 if "%fickart64%"=="" echo 64-bit FKart install not found
+  if %cwd-enabled%==1 if exist %x32bitdir%\SRB2FKART.EXE set fickart64=%x64bitdir%\SRB2FKART.EXE
+  if %cwd-enabled%==1 if "%fickart64%"=="" echo 64-bit FKart install still not found
   if not "%fickart64%"=="" echo 64-bit FKart install is located at %fickart64%
   
   call :get-ini kartlauncher.ini LAUNCHER SHADERFIX-X86-PATH shaders32
@@ -51,7 +57,10 @@ REM THIS PROGRAM COMES WITH NO WARRANTY, BE IT IMPLIED OR EXPLICIT. USE AT YOUR 
   if not "%shaders32%"=="" echo 32-bit Shader Fix install is located at %shaders32%
   
   call :get-ini kartlauncher.ini LAUNCHER SHADERFIX-X64-PATH shaders64
-  if "%shaders64%"=="" echo 64-bit Shader Fix install not found
+  if %cwd-enabled%==1 if "%shaders64%"=="" echo 64-bit Shader Fix install not found, checking 64-bit working directory...
+  if %cwd-enabled%==0 if "%shaders64%"=="" echo 64-bit Shader Fix install not found
+  if %cwd-enabled%==1 if exist %x64bitdir%\SRB2KART-SHADERS.EXE set shaders64=%x64bitdir%\SRB2KART-SHADERS.EXE
+  if %cwd-enabled%==1 if "%shaders64%"=="" echo 64-bit Shader Fix install still not found
   if not "%shaders64%"=="" echo 64-bit Shader Fix install is located at %shaders64%
   
   call :get-ini kartlauncher.ini LAUNCHER BATTLEROYALE-X86-PATH fornite32
@@ -62,7 +71,10 @@ REM THIS PROGRAM COMES WITH NO WARRANTY, BE IT IMPLIED OR EXPLICIT. USE AT YOUR 
   if not "%fornite32%"=="" echo 32-bit Battle Royale install is located at %fornite32%
   
   call :get-ini kartlauncher.ini LAUNCHER BATTLEROYALE-X64-PATH fornite64
-  if "%fornite64%"=="" echo 64-bit Battle Royale install not found
+  if %cwd-enabled%==1 if "%fornite64%"=="" echo 64-bit Battle Royale install not found, checking 64 -bit working directory...
+  if %cwd-enabled%==0 if "%fornite64%"=="" echo 64-bit Battle Royale install not found
+  if %cwd-enabled%==1 if exist %x64bitdir%\SRB2KART-BATTLEROYALE.EXE set fornite64=%x64bitdir%\SRB2KART-BATTLEROYALE.EXE
+  if %cwd-enabled%==1 if "%fornite64%"=="" echo 64-bit Battle Royale install still not found
   if not "%fornite64%"=="" echo 64-bit Battle Royale install is located at %fornite64%
   
   choice /N /T 5 /D Y /M "Is this okay?"
@@ -77,7 +89,7 @@ REM THIS PROGRAM COMES WITH NO WARRANTY, BE IT IMPLIED OR EXPLICIT. USE AT YOUR 
   
   REM todo: ADD CUSTOM .EXE SUPPORT AT SOME POINT
   cls
-  @echo off 
+  @echo off
   REM change to @echo on to enable debug logging
   :menu
   echo [KURZOV'S SRB2KART COMMAND LINE LAUNCHER]
@@ -92,7 +104,7 @@ REM THIS PROGRAM COMES WITH NO WARRANTY, BE IT IMPLIED OR EXPLICIT. USE AT YOUR 
   if not "%fornite64%"=="" echo 8: Battle Royale, 64-bit
   echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   if "%lsfunction%"=="" choice /C:12345678Z /N /M "Choose an executable from the above list, or press Z to stop this program."
-  if "%lsfunction%"=="1" choice /C:12345678Z /N /M "Choose an executable from the above list, or press Z to stop this program. Note: You may need to press Z more than once."
+  if "%lsfunction%"=="1" choice /C:12345678Z /N /M "Choose an executable from the above list, or press Z to stop this program. You may need to press Z more than once to completely halt the script."
   if ERRORLEVEL 9 GOTO :eof
   if ERRORLEVEL 8 GOTO br64
   if ERRORLEVEL 7 GOTO br32
@@ -222,26 +234,118 @@ REM ----------------------- FICKLE KART 64 BIT -----------------------------
   if ERRORLEVEL == 1 %fickart64% -openGL
   goto menu
   
+REM ------------------------- SHADER FIX 32 BIT --------------------------
   :shader32
   cls
   echo SHADER FIX, 32-BIT
-  pause
-  goto :eof
+  call :lastserver shader32
+  goto menu
+  
+  :shader32-direct
+  echo [DEBUG] shaderfix32direct
+  cd %x32bitdir%
+  choice /M "Use OpenGL? (Y for OpenGL, N for Software)"
+  echo Please wait for the game to start...
+  echo WARNING: Window may appear below this console window!!
+  echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  if ERRORLEVEL == 2 %shaders32% -connect %lastserver%
+  if ERRORLEVEL == 1 %shaders32% -openGL -connect %lastserver%
+  goto menu
+  
+  :shader32-indirect
+  echo [DEBUG] shaderfix32indirect
+  cd %x32bitdir%
+  choice /M "Use OpenGL? (Y for OpenGL, N for Software)"
+  echo Please wait for the game to start...
+  echo WARNING: Window may appear below this console window!!
+  echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  if ERRORLEVEL == 2 %shaders32% 
+  if ERRORLEVEL == 1 %shaders32% -openGL
+  goto menu
+REM --------------------- SHADER FIX 64 BIT ------------------------------  
   :shader64
   cls
   echo SHADER FIX, 64-BIT
-  pause
-  goto :eof
+  call :lastserver shader64
+  goto menu
+
+  :shader64-direct
+  echo [DEBUG] shaderfix64direct
+  cd %x64bitdir%
+  choice /M "Use OpenGL? (Y for OpenGL, N for Software)"
+  echo Please wait for the game to start...
+  echo WARNING: Window may appear below this console window!!
+  echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  if ERRORLEVEL == 2 %shaders64% -connect %lastserver%
+  if ERRORLEVEL == 1 %shaders64% -openGL -connect %lastserver%
+  goto menu
+  
+  :shader64-indirect
+  echo [DEBUG] shaderfix64indirect
+  cd %x64bitdir%
+  choice /M "Use OpenGL? (Y for OpenGL, N for Software)"
+  echo Please wait for the game to start...
+  echo WARNING: Window may appear below this console window!!
+  echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  if ERRORLEVEL == 2 %shaders64% 
+  if ERRORLEVEL == 1 %shaders64% -openGL
+  goto menu
+REM ------------------ BATTLE ROYALE 32 BIT -----------------------------  
   :br32
   cls
   echo BATTLE ROYALE, 32-BIT
-  pause
-  goto :eof  
-  :br64
+  call :lastserver br32
+  goto menu
+
+  :br32-direct
+  echo [DEBUG] battleroyale32direct
+  cd %x32bitdir%
+  choice /M "Use OpenGL? (Y for OpenGL, N for Software)"
+  echo Please wait for the game to start...
+  echo WARNING: Window may appear below this console window!!
+  echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  if ERRORLEVEL == 2 %fornite32% -connect %lastserver%
+  if ERRORLEVEL == 1 %fornite32% -openGL -connect %lastserver%
+  goto menu
+  
+  :br32-indirect
+  echo [DEBUG] battleroyale32indirect
+  cd %x32bitdir%
+  choice /M "Use OpenGL? (Y for OpenGL, N for Software)"
+  echo Please wait for the game to start...
+  echo WARNING: Window may appear below this console window!!
+  echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  if ERRORLEVEL == 2 %fornite32% 
+  if ERRORLEVEL == 1 %fornite32% -openGL
+  goto menu 
+REM ---------------- BATTLE ROYALE 64 BIT -----------------------------------  
+  :br32
   cls
   echo BATTLE ROYALE, 64-BIT
-  pause
-  goto :eof
+  call :lastserver br64
+  goto menu
+
+  :br32-direct
+  echo [DEBUG] battleroyale64direct
+  cd %x64bitdir%
+  choice /M "Use OpenGL? (Y for OpenGL, N for Software)"
+  echo Please wait for the game to start...
+  echo WARNING: Window may appear below this console window!!
+  echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  if ERRORLEVEL == 2 %fornite64% -connect %lastserver%
+  if ERRORLEVEL == 1 %fornite64% -openGL -connect %lastserver%
+  goto menu
+  
+  :br32-indirect
+  echo [DEBUG] battleroyale64indirect
+  cd %x64bitdir%
+  choice /M "Use OpenGL? (Y for OpenGL, N for Software)"
+  echo Please wait for the game to start...
+  echo WARNING: Window may appear below this console window!!
+  echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  if ERRORLEVEL == 2 %fornite64% 
+  if ERRORLEVEL == 1 %fornite64% -openGL
+  goto menu 
 
 
 
