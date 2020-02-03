@@ -1,0 +1,11 @@
+65d0acd26180a9b3d784c889a199900f,VANILLA,VANILLA,VANILLA
+193f84f62ecfc3942b5b111641fdc2d5,BATTLE,VANILLA,VANILLA
+d49e015cc8dfd4ba84aef1de3bc14a48,FKART,VANILLA,VANILLA
+d7df9553e89e7718655d7bf01454897f,FKART,SHADER,VANILLA
+7da7690d82d660daa89ca244e9b0eeb3,FKART,BATTLE,VANILLA
+; HASH - MAIN - COMBO1 - COMBO2 - COMBO3
+; if singular build just write vanilla for any unneeded arguments
+; current valid arguments for COMBO1/2/3 are:
+; VANILLA, BATTLE, FKART, SHADER
+; FKART should go first, then any other build alterations, then vanilla
+; if solely "vanilla" build checksum set all COMBO fields to VANILLA
