@@ -11,7 +11,6 @@ REM THIS PROGRAM COMES WITH NO WARRANTY, BE IT IMPLIED OR EXPLICIT. USE AT YOUR 
 
 :main
   @echo off
-  
   setlocal enabledelayedexpansion
   cd "%~dp0"
   mkdir logs
@@ -25,12 +24,11 @@ REM THIS PROGRAM COMES WITH NO WARRANTY, BE IT IMPLIED OR EXPLICIT. USE AT YOUR 
   set launcherlogging=%scriptlocation%\logs\
   set temporaryhashstorage=%launcherlogging%\tempkarthash.txt
   
-  cls
   echo CONFIGURATION CHECK
   call :get-ini kartlauncher.ini LAUNCHER CHECK-WORKING-DIRECTORIES cwd-enabled
-  if %cwd-enabled%==0 echo Search mode is: MANUAL OPTION FILE.
-  if %cwd-enabled%==1 echo Search mode is:   HARDCODED LOOKUP.
-  if %cwd-enabled%==2 echo Search mode is:        ENUMERATION.
+  if %cwd-enabled%==0 echo Search mode is: [LEGACY] OPTION FILE. Consider using CHECK-WORKING-DIRECTORIES=2.
+  if %cwd-enabled%==1 echo Search mode is: [LEGACY] HARDCODED LOOKUP. Consider using CHECK-WORKING-DIRECTORIES=2.
+  if %cwd-enabled%==2 echo Search mode is: ENUMERATION.
   if not exist %scriptlocation%\hashdeep.exe if %cwd-enabled%==2 goto hashdeep-missing
   call :get-ini kartlauncher.ini LAUNCHER 32-BIT-DIR x32bitdir
   echo 32-bit (x86) working directory is %x32bitdir%
@@ -95,7 +93,7 @@ REM THIS PROGRAM COMES WITH NO WARRANTY, BE IT IMPLIED OR EXPLICIT. USE AT YOUR 
   if not "%fornite64%"=="" echo 64-bit Battle Royale install is located at %fornite64%
   :notice
   choice /N /T 5 /D Y /M "Is this okay?"
-  cls
+  REM cls
   call :get-ini kartlauncher.ini LAUNCHER HYUUSEEKER-ENABLED hs-enabled
                      echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   if %hs-enabled%==0 echo                 NOTICE - Experimental HyuuSeeker support is DISABLED!!
@@ -114,17 +112,21 @@ REM THIS PROGRAM COMES WITH NO WARRANTY, BE IT IMPLIED OR EXPLICIT. USE AT YOUR 
   if not "%vanilla32%"=="" echo 1: Vanilla, 32-bit
   if not "%vanilla64%"=="" echo 2: Vanilla, 64-bit
   if not "%fickart32-reg%"=="" echo 3: FKart, 32-bit
-  if not "%fickart64%"=="" echo 4: FKart, 64-bit
+  if not "%fickart64-reg%"=="" echo 4: FKart, 64-bit
   if not "%shaders32%"=="" echo 5: Shader Fix, 32-bit
   if not "%shaders64%"=="" echo 6: Shader Fix, 64-bit
   if not "%fornite32%"=="" echo 7: Battle Royale, 32-bit
   if not "%fornite64%"=="" echo 8: Battle Royale, 64-bit
   if not "%fickart32-sdr%"=="" echo 9: FKart with Shaders, 32-bit
   if not "%fickart32-bry%"=="" echo A: FKart with Battle Royale, 32-bit
+  if not "%fickart64-sdr%"=="" echo B: FKart with Shaders, 32-bit
+  if not "%fickart64-bry%"=="" echo C: FKart with Battle Royale, 64-bit
   echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  if "%lsfunction%"=="" choice /C:123456789AZ /N /M "Choose an executable from the above list, or press Z to stop this program."
-  if "%lsfunction%"=="1" choice /C:123456789AZ /N /M "Choose an executable from the above list, or press Z to stop this program. You may need to press Z more than once to completely halt the script."
-  if ERRORLEVEL 11 GOTO :eof
+  if "%lsfunction%"=="" choice /C:123456789ABCZ /N /M "Choose an executable from the above list, or press Z to stop this program."
+  if "%lsfunction%"=="1" choice /C:123456789ABCZ /N /M "Choose an executable from the above list, or press Z to stop this program. You may need to press Z more than once to completely halt the script."
+  if ERRORLEVEL 13 GOTO leave
+  if ERRORLEVEL 12 GOTO fkart-bry32
+  if ERRORLEVEL 11 GOTO fkart-sdr32
   if ERRORLEVEL 10 GOTO fkart-bry32
   if ERRORLEVEL 9 GOTO fkart-sdr32
   if ERRORLEVEL 8 GOTO br64
@@ -136,9 +138,8 @@ REM THIS PROGRAM COMES WITH NO WARRANTY, BE IT IMPLIED OR EXPLICIT. USE AT YOUR 
   if ERRORLEVEL 2 GOTO vanilla64
   if ERRORLEVEL 1 GOTO vanilla32
   
-  REM todo: ADD DIRECT CONNECTING TO SERVERS AT SOME POINT
+  REM todo: make the following section a bit less stupid
   REM todo: ADD HYUUSEEKER INTEGRATION AT SOME POINT
-  REM (HyuuSeeker support will probably be tied to direct connecting to servers)
   
   
   
@@ -240,8 +241,8 @@ REM ----------------------- FICKLE KART 64 BIT -----------------------------
   echo Please wait for the game to start...
   echo WARNING: Window may appear below this console window!!
   echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  if ERRORLEVEL == 2 %fickart64% -connect %lastserver%
-  if ERRORLEVEL == 1 %fickart64% -openGL -connect %lastserver%
+  if ERRORLEVEL == 2 %fickart64-reg% -connect %lastserver%
+  if ERRORLEVEL == 1 %fickart64-reg% -openGL -connect %lastserver%
   goto menu
   
   :fkart64-indirect
@@ -251,8 +252,8 @@ REM ----------------------- FICKLE KART 64 BIT -----------------------------
   echo Please wait for the game to start...
   echo WARNING: Window may appear below this console window!!
   echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  if ERRORLEVEL == 2 %fickart64% 
-  if ERRORLEVEL == 1 %fickart64% -openGL
+  if ERRORLEVEL == 2 %fickart64-reg% 
+  if ERRORLEVEL == 1 %fickart64-reg% -openGL
   goto menu
   
 REM ------------------------- SHADER FIX 32 BIT --------------------------
@@ -340,13 +341,13 @@ REM ------------------ BATTLE ROYALE 32 BIT -----------------------------
   if ERRORLEVEL == 1 %fornite32% -openGL
   goto menu 
 REM ---------------- BATTLE ROYALE 64 BIT -----------------------------------  
-  :br32
+  :br64
   cls
   echo BATTLE ROYALE, 64-BIT
   call :lastserver br64
   goto menu
 
-  :br32-direct
+  :br64-direct
   echo [DEBUG] battleroyale64direct
   cd %x64bitdir%
   choice /M "Use OpenGL? (Y for OpenGL, N for Software)"
@@ -357,7 +358,7 @@ REM ---------------- BATTLE ROYALE 64 BIT -----------------------------------
   if ERRORLEVEL == 1 %fornite64% -openGL -connect %lastserver%
   goto menu
   
-  :br32-indirect
+  :br64-indirect
   echo [DEBUG] battleroyale64indirect
   cd %x64bitdir%
   choice /M "Use OpenGL? (Y for OpenGL, N for Software)"
@@ -367,17 +368,118 @@ REM ---------------- BATTLE ROYALE 64 BIT -----------------------------------
   if ERRORLEVEL == 2 %fornite64% 
   if ERRORLEVEL == 1 %fornite64% -openGL
   goto menu 
-  
+REM -------------- FKART PLUS BATTLE ROYALE 32 BIT --------------
   :fkart-bry32
+  cls
   echo FKART PLUS BATTLE ROYALE, 32 BIT
-  echo sorry, not implemented
-  pause
+  call :lastserver fkart-bry32
   goto menu
   
+  :fkart-bry32-direct
+  echo [DEBUG] ficklekartbry32direct
+  cd %x32bitdir%
+  choice /M "Use OpenGL? (Y for OpenGL, N for Software)"
+  echo Please wait for the game to start...
+  echo WARNING: Window may appear below this console window!!
+  echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  if ERRORLEVEL == 2 %fickart32-bry% -connect %lastserver%
+  if ERRORLEVEL == 1 %fickart32-bry% -openGL -connect %lastserver%
+  goto menu
+  
+  :fkart-bry32-indirect
+  echo [DEBUG] ficklekartbry32indirect
+  cd %x32bitdir%
+  choice /M "Use OpenGL? (Y for OpenGL, N for Software)"
+  echo Please wait for the game to start...
+  echo WARNING: Window may appear below this console window!!
+  echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  if ERRORLEVEL == 2 %fickart32-bry% 
+  if ERRORLEVEL == 1 %fickart32-bry% -openGL
+  goto menu
+REM -------------- FKART PLUS SHADERS 32 BIT --------------
   :fkart-sdr32
+  cls
   echo FKART PLUS SHADERS, 32 BIT
-  echo sorry, not implemented
-  pause
+  call :lastserver fkart-sdr32
+  goto menu
+  
+  :fkart-sdr32-direct
+  echo [DEBUG] ficklekartsdr32direct
+  cd %x32bitdir%
+  choice /M "Use OpenGL? (Y for OpenGL, N for Software)"
+  echo Please wait for the game to start...
+  echo WARNING: Window may appear below this console window!!
+  echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  if ERRORLEVEL == 2 %fickart32-sdr% -connect %lastserver%
+  if ERRORLEVEL == 1 %fickart32-sdr% -openGL -connect %lastserver%
+  goto menu
+  
+  :fkart-sdr32-indirect
+  echo [DEBUG] ficklekartsdr32indirect
+  cd %x32bitdir%
+  choice /M "Use OpenGL? (Y for OpenGL, N for Software)"
+  echo Please wait for the game to start...
+  echo WARNING: Window may appear below this console window!!
+  echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  if ERRORLEVEL == 2 %fickart32-sdr% 
+  if ERRORLEVEL == 1 %fickart32-sdr% -openGL
+  goto menu
+REM -------------- FKART PLUS BATTLE ROYALE 64 BIT --------------  
+  :fkart-bry64
+  REM idk if this even exists right now but just for posterity
+  cls
+  echo FKART PLUS BATTLE ROYALE, 64 BIT
+  call :lastserver fkart-bry64
+  goto menu
+  
+  :fkart-bry64-direct
+  echo [DEBUG] ficklekartbry64direct
+  cd %x64bitdir%
+  choice /M "Use OpenGL? (Y for OpenGL, N for Software)"
+  echo Please wait for the game to start...
+  echo WARNING: Window may appear below this console window!!
+  echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  if ERRORLEVEL == 2 %fickart64-bry% -connect %lastserver%
+  if ERRORLEVEL == 1 %fickart64-bry% -openGL -connect %lastserver%
+  goto menu
+  
+  :fkart-bry64-indirect
+  echo [DEBUG] ficklekartbry64indirect
+  cd %x64bitdir%
+  choice /M "Use OpenGL? (Y for OpenGL, N for Software)"
+  echo Please wait for the game to start...
+  echo WARNING: Window may appear below this console window!!
+  echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  if ERRORLEVEL == 2 %fickart64-bry% 
+  if ERRORLEVEL == 1 %fickart64-bry% -openGL
+  goto menu
+REM -------------- FKART PLUS SHADERS 64 BIT --------------
+  :fkart-sdr64
+  cls
+  echo FKART PLUS SHADERS, 64 BIT
+  call :lastserver fkart-sdr64
+  goto menu
+  
+  :fkart-sdr64-direct
+  echo [DEBUG] ficklekartsdr64direct
+  cd %x64bitdir%
+  choice /M "Use OpenGL? (Y for OpenGL, N for Software)"
+  echo Please wait for the game to start...
+  echo WARNING: Window may appear below this console window!!
+  echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  if ERRORLEVEL == 2 %fickart64-sdr% -connect %lastserver%
+  if ERRORLEVEL == 1 %fickart64-sdr% -openGL -connect %lastserver%
+  goto menu
+  
+  :fkart-sdr64-indirect
+  echo [DEBUG] ficklekartsdr64indirect
+  cd %x64bitdir%
+  choice /M "Use OpenGL? (Y for OpenGL, N for Software)"
+  echo Please wait for the game to start...
+  echo WARNING: Window may appear below this console window!!
+  echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  if ERRORLEVEL == 2 %fickart64-sdr% 
+  if ERRORLEVEL == 1 %fickart64-sdr% -openGL
   goto menu
   
 REM Supporting Elements (the INI reader, """""Last Server""""" implementation, etc.)
@@ -424,15 +526,25 @@ exit /B 1
   endlocal
   
 :newsearch
-FOR /F "tokens=*" %%G IN ('DIR/B /S %x32bitdir%\*.exe') DO ( hashdeep -c md5 %%G >> "%temporaryhashstorage%" && FOR /F "usebackq tokens=2 skip=5 delims=," %%H IN ("%temporaryhashstorage%") DO ( FOR /F "tokens=1,2,3,4 delims=," %%I IN (checksums-x86.txt) DO (
-			if %%H==%%I if %%J==%vanillahash% set vanilla32=%%G
-			if %%H==%%I if %%J==%battlehash% if %%K==%vanillahash% set fornite32=%%G
-			if %%H==%%I if %%J==%shaderhash% if %%K==%vanillahash% set shader32=%%G
-			if %%H==%%I if %%J==%fkarthash% if %%K==%vanillahash% set fickart32-reg=%%G
-			if %%H==%%I if %%J==%fkarthash% if %%K==%shaderhash% if %%L==%vanillahash% set fickart32-sdr=%%G
-			if %%H==%%I if %%J==%fkarthash% if %%K==%battlehash% if %%L==%vanillahash% set fickart32-bry=%%G
-			if NOT %%H==%%I echo %%G >> %launcherlogging%\unknown-checksums-x86.txt
-		)
+set n=0
+FOR /F "tokens=*" %%G IN ('DIR/B /S %x32bitdir%\*.exe') DO ( hashdeep -c md5 %%G >> "%temporaryhashstorage%" ) && set /a n=!n!+1 && FOR /F "usebackq tokens=2 skip=5 delims=," %%H IN ("%temporaryhashstorage%") DO (
+	echo %%H
+	
+	set kart-build-path[!n!]=%%G
+	set kart-build-chks[!n!]=%%H
+	IF %%H=="65d0acd26180a9b3d784c889a199900f" (
+		set kart-build-type[!n!]=vanilla
+		set kart-build-vers[!n!]=v1.1.0
 	)
+	IF NOT %%H=="65d0acd26180a9b3d784c889a199900f" echo unknown checksum, report to kurzov
 )
+
+
+REM TODO: identify *specific* builds (e.g. vanilla v1.0.1) by checksum, 32bit/64bit
+echo. !kart-build-path[1]!
+echo N is %n%
 goto notice
+
+:leave
+set buildIndex=0
+exit /B 0
