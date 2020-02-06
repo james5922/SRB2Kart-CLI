@@ -13,17 +13,13 @@ REM THIS PROGRAM COMES WITH NO WARRANTY, BE IT IMPLIED OR EXPLICIT. USE AT YOUR 
   @echo off
   setlocal enabledelayedexpansion
   cd "%~dp0"
-  mkdir logs
-  REM For determining versions when doing hash-checking
-  set vanillahash=VANILLA
-  set fkarthash=FKART
-  set battlehash=BATTLE
-  set shaderhash=SHADER
-  REM End hash-checking placeholder names
+  if not exist %~dp0logs mkdir logs
   set scriptlocation=%~dp0
   set launcherlogging=%~dp0logs
   set temporaryhashstorage=%~dp0logs\tempkarthash.txt
-  
+  set temp_CHKSM_HOLDER=
+  set TEMP_PATH_HOLDER=
+  set TEMP_SHORT_CHKSM_HOLDER=
   echo CONFIGURATION CHECK
   call :get-ini kartlauncher.ini LAUNCHER CHECK-WORKING-DIRECTORIES cwd-enabled
   if %cwd-enabled%==0 echo Search mode is: [LEGACY] OPTION FILE. Consider using CHECK-WORKING-DIRECTORIES=2.
@@ -106,36 +102,39 @@ REM THIS PROGRAM COMES WITH NO WARRANTY, BE IT IMPLIED OR EXPLICIT. USE AT YOUR 
   @echo off
   REM change to @echo on to enable debug logging
   :menu
-  echo [KURZOV'S SRB2KART COMMAND LINE LAUNCHER]
-  echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  if not "%vanilla32%"=="" echo 1: Vanilla, 32-bit
-  if not "%vanilla64%"=="" echo 2: Vanilla, 64-bit
-  if not "%fickart32-reg%"=="" echo 3: FKart, 32-bit
-  if not "%fickart64-reg%"=="" echo 4: FKart, 64-bit
-  if not "%shaders32%"=="" echo 5: Shader Fix, 32-bit
-  if not "%shaders64%"=="" echo 6: Shader Fix, 64-bit
-  if not "%fornite32%"=="" echo 7: Battle Royale, 32-bit
-  if not "%fornite64%"=="" echo 8: Battle Royale, 64-bit
-  if not "%fickart32-sdr%"=="" echo 9: FKart with Shaders, 32-bit
-  if not "%fickart32-bry%"=="" echo A: FKart with Battle Royale, 32-bit
-  if not "%fickart64-sdr%"=="" echo B: FKart with Shaders, 32-bit
-  if not "%fickart64-bry%"=="" echo C: FKart with Battle Royale, 64-bit
-  echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  if "%lsfunction%"=="" choice /C:123456789ABCZ /N /M "Choose an executable from the above list, or press Z to stop this program."
-  if "%lsfunction%"=="1" choice /C:123456789ABCZ /N /M "Choose an executable from the above list, or press Z to stop this program. You may need to press Z more than once to completely halt the script."
-  if ERRORLEVEL 13 GOTO leave
-  if ERRORLEVEL 12 GOTO fkart-bry32
-  if ERRORLEVEL 11 GOTO fkart-sdr32
-  if ERRORLEVEL 10 GOTO fkart-bry32
-  if ERRORLEVEL 9 GOTO fkart-sdr32
-  if ERRORLEVEL 8 GOTO br64
-  if ERRORLEVEL 7 GOTO br32
-  if ERRORLEVEL 6 GOTO shader64
-  if ERRORLEVEL 5 GOTO shader32
-  if ERRORLEVEL 4 GOTO fkart64
-  if ERRORLEVEL 3 GOTO fkart32
-  if ERRORLEVEL 2 GOTO vanilla64
-  if ERRORLEVEL 1 GOTO vanilla32
+  set /p getABuildNum="Type in a build number [1 to %X32BUILDNUMBER%]"
+  call :get_build_info %getABuildNum%
+  
+  REM echo [KURZOV'S SRB2KART COMMAND LINE LAUNCHER]
+  REM echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  REM if not "%vanilla32%"=="" echo 1: Vanilla, 32-bit
+  REM if not "%vanilla64%"=="" echo 2: Vanilla, 64-bit
+  REM if not "%fickart32-reg%"=="" echo 3: FKart, 32-bit
+  REM if not "%fickart64-reg%"=="" echo 4: FKart, 64-bit
+  REM if not "%shaders32%"=="" echo 5: Shader Fix, 32-bit
+  REM if not "%shaders64%"=="" echo 6: Shader Fix, 64-bit
+  REM if not "%fornite32%"=="" echo 7: Battle Royale, 32-bit
+  REM if not "%fornite64%"=="" echo 8: Battle Royale, 64-bit
+  REM if not "%fickart32-sdr%"=="" echo 9: FKart with Shaders, 32-bit
+  REM if not "%fickart32-bry%"=="" echo A: FKart with Battle Royale, 32-bit
+  REM if not "%fickart64-sdr%"=="" echo B: FKart with Shaders, 32-bit
+  REM if not "%fickart64-bry%"=="" echo C: FKart with Battle Royale, 64-bit
+  REM echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  REM if "%lsfunction%"=="" choice /C:123456789ABCZ /N /M "Choose an executable from the above list, or press Z to stop this program."
+  REM if "%lsfunction%"=="1" choice /C:123456789ABCZ /N /M "Choose an executable from the above list, or press Z to stop this program. You may need to press Z more than once to completely halt the script."
+  REM if ERRORLEVEL 13 GOTO leave
+  REM if ERRORLEVEL 12 GOTO fkart-bry32
+  REM if ERRORLEVEL 11 GOTO fkart-sdr32
+  REM if ERRORLEVEL 10 GOTO fkart-bry32
+  REM if ERRORLEVEL 9 GOTO fkart-sdr32
+  REM if ERRORLEVEL 8 GOTO br64
+  REM if ERRORLEVEL 7 GOTO br32
+  REM if ERRORLEVEL 6 GOTO shader64
+  REM if ERRORLEVEL 5 GOTO shader32
+  REM if ERRORLEVEL 4 GOTO fkart64
+  REM if ERRORLEVEL 3 GOTO fkart32
+  REM if ERRORLEVEL 2 GOTO vanilla64
+  REM if ERRORLEVEL 1 GOTO vanilla32
   
   REM todo: make the following section a bit less stupid
   REM todo: ADD HYUUSEEKER INTEGRATION AT SOME POINT
@@ -528,35 +527,47 @@ exit /B 1
 :newsearch
 set X32BUILDNUMBER=0
 pause
+@echo on
 FOR /F "tokens=*" %%G IN ('DIR/B /S %x32bitdir%\*.exe') DO (
 	set /a X32BUILDNUMBER+=1
 	set TEMP_PATH_HOLDER=%%G
-	md5deep -W %launcherlogging%\md5deepoutput.txt %%G 
-	set TEMP_CHKSM_HOLDER < %launcherlogging%\md5deepoutput.txt
-	set TEMP_SHORT_CHKSM_HOLDER=%TEMP_CHKSM_HOLDER:~0,32%
-	IF %TEMP_SHORT_CHKSM_HOLDER%=="65d0acd26180a9b3d784c889a199900f" call :assign_build_info vanilla 1.1.0 05-29-2019 none %X32BUILDNUMBER%
-	IF "%TEMP_SHORT_CHKSM_HOLDER%"=="193f84f62ecfc3942b5b111641fdc2d5" call :assign_build_info vanilla 1.1.0 12-21-2019 fortnite %X32BUILDNUMBER%
-	
+	call :get_checksum
+	echo Got checksum for !X32BUILDNUMBER!.
+	set STARTCHAR=0
+	set LENGTH=32
+	set TEMP_SHORT_CHKSM_HOLDER=%temp_CHKSM_HOLDER:~0,32%
+	IF "%TEMP_SHORT_CHKSM_HOLDER%"=="65d0acd26180a9b3d784c889a199900f" call :assign_build_info vanilla 1.1.0 05-29-2019 none !X32BUILDNUMBER! 
+	IF "%TEMP_SHORT_CHKSM_HOLDER%"=="193f84f62ecfc3942b5b111641fdc2d5" call :assign_build_info vanilla 1.1.0 12-21-2019 fortnite !X32BUILDNUMBER!
 	
 	
 )
-pause
 REM TODO: identify *specific* builds (e.g. vanilla v1.0.1) by checksum, 32bit/64bit
 goto notice
 
+:get_checksum
+	md5deep -W DEEPEXPORT.TXT %TEMP_PATH_HOLDER% 
+	FOR /F %%H IN (DEEPEXPORT.TXT) DO set temp_CHKSM_HOLDER=%%H
+  exit /b 0
+
 :assign_build_info <type> <vers> <date> <scrm> <buildnum>
-	set KART-32BUILD-[!X32BUILDNUMBER!]-TYPE=%1
-	set KART-32BUILD-[!X32BUILDNUMBER!]-VERS=%2
-	set KART-32BUILD-[!X32BUILDNUMBER!]-DATE=%3
-	set KART-32BUILD-[!X32BUILDNUMBER!]-SRCM=%4
-goto :eof
+	call set KART-32BUILD-%5-TYPE=%1
+	echo [DEBUG] Set Build %5's type to %1
+	call set KART-32BUILD-%5-VERS=%2
+	echo [DEBUG] Set Build %5's version to %1
+	call set KART-32BUILD-%5-DATE=%3
+	echo [DEBUG] Set Build %5's date to %1
+	call set KART-32BUILD-%5-SRCM=%4
+	echo [DEBUG] Set Build %5's source mod to %1
+  exit /b 0
 
 :get_build_info <buildnum>
-	echo Build Type: %KART-32BUILD-!X32BUILDNUMBER!]-TYPE%
-	echo Build Vers: %KART-32BUILD-!X32BUILDNUMBER!]-VERS%
-	echo Build Date: %KART-32BUILD-!X32BUILDNUMBER!]-DATE%
-	echo Build Srcm: %KART-32BUILD-!X32BUILDNUMBER!]-SRCM%
-goto :eof
+	set temp_build_info_holder=%1
+	echo Build Type: %KART-32BUILD-%%temp_build_info_holder%%-TYPE%
+	echo Build Vers: %KART-32BUILD-%%temp_build_info_holder%%-VERS%
+	echo Build Date: %KART-32BUILD-%%temp_build_info_holder%%-DATE%
+	echo Build Srcm: %KART-32BUILD-%%temp_build_info_holder%%-SRCM%
+	pause
+  exit /b 0
 
 :leave
 set buildIndex=0
