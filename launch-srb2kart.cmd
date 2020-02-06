@@ -21,8 +21,8 @@ REM THIS PROGRAM COMES WITH NO WARRANTY, BE IT IMPLIED OR EXPLICIT. USE AT YOUR 
   set shaderhash=SHADER
   REM End hash-checking placeholder names
   set scriptlocation=%~dp0
-  set launcherlogging=%scriptlocation%\logs\
-  set temporaryhashstorage=%launcherlogging%\tempkarthash.txt
+  set launcherlogging=%~dp0logs
+  set temporaryhashstorage=%~dp0logs\tempkarthash.txt
   
   echo CONFIGURATION CHECK
   call :get-ini kartlauncher.ini LAUNCHER CHECK-WORKING-DIRECTORIES cwd-enabled
@@ -101,7 +101,6 @@ REM THIS PROGRAM COMES WITH NO WARRANTY, BE IT IMPLIED OR EXPLICIT. USE AT YOUR 
                      echo THIS PROGRAM COMES WITH NO WARRANTY, BE IT IMPLIED OR EXPLICIT. USE AT YOUR OWN RISK.
                      echo ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   pause
-  
   REM todo: ADD CUSTOM .EXE SUPPORT AT SOME POINT
   cls
   @echo off
@@ -486,7 +485,8 @@ REM Supporting Elements (the INI reader, """""Last Server""""" implementation, e
 
 :hashdeep-missing
 cls
-echo Hashdeep is required to use the Command Line Interface. You can obtain it at http://md5deep.sourceforge.net/ - aborting program
+echo Hashdeep is required to use the Command Line Interface with the search mode set to ENUMERATION. You can obtain it at http://md5deep.sourceforge.net/ - aborting program
+pause
 exit /B 1
 
 :get-ini <filename> <section> <key> <result>
@@ -526,24 +526,37 @@ exit /B 1
   endlocal
   
 :newsearch
-set n=0
-FOR /F "tokens=*" %%G IN ('DIR/B /S %x32bitdir%\*.exe') DO ( hashdeep -c md5 %%G >> "%temporaryhashstorage%" ) && set /a n=!n!+1 && FOR /F "usebackq tokens=2 skip=5 delims=," %%H IN ("%temporaryhashstorage%") DO (
-	echo %%H
+set X32BUILDNUMBER=0
+pause
+FOR /F "tokens=*" %%G IN ('DIR/B /S %x32bitdir%\*.exe') DO (
+	set /a X32BUILDNUMBER+=1
+	set TEMP_PATH_HOLDER=%%G
+	md5deep -W %launcherlogging%\md5deepoutput.txt %%G 
+	set TEMP_CHKSM_HOLDER < %launcherlogging%\md5deepoutput.txt
+	set TEMP_SHORT_CHKSM_HOLDER=%TEMP_CHKSM_HOLDER:~0,32%
+	IF %TEMP_SHORT_CHKSM_HOLDER%=="65d0acd26180a9b3d784c889a199900f" call :assign_build_info vanilla 1.1.0 05-29-2019 none %X32BUILDNUMBER%
+	IF "%TEMP_SHORT_CHKSM_HOLDER%"=="193f84f62ecfc3942b5b111641fdc2d5" call :assign_build_info vanilla 1.1.0 12-21-2019 fortnite %X32BUILDNUMBER%
 	
-	set kart-build-path[!n!]=%%G
-	set kart-build-chks[!n!]=%%H
-	IF %%H=="65d0acd26180a9b3d784c889a199900f" (
-		set kart-build-type[!n!]=vanilla
-		set kart-build-vers[!n!]=v1.1.0
-	)
-	IF NOT %%H=="65d0acd26180a9b3d784c889a199900f" echo unknown checksum, report to kurzov
+	
+	
 )
-
-
+pause
 REM TODO: identify *specific* builds (e.g. vanilla v1.0.1) by checksum, 32bit/64bit
-echo. !kart-build-path[1]!
-echo N is %n%
 goto notice
+
+:assign_build_info <type> <vers> <date> <scrm> <buildnum>
+	set KART-32BUILD-[!X32BUILDNUMBER!]-TYPE=%1
+	set KART-32BUILD-[!X32BUILDNUMBER!]-VERS=%2
+	set KART-32BUILD-[!X32BUILDNUMBER!]-DATE=%3
+	set KART-32BUILD-[!X32BUILDNUMBER!]-SRCM=%4
+goto :eof
+
+:get_build_info <buildnum>
+	echo Build Type: %KART-32BUILD-!X32BUILDNUMBER!]-TYPE%
+	echo Build Vers: %KART-32BUILD-!X32BUILDNUMBER!]-VERS%
+	echo Build Date: %KART-32BUILD-!X32BUILDNUMBER!]-DATE%
+	echo Build Srcm: %KART-32BUILD-!X32BUILDNUMBER!]-SRCM%
+goto :eof
 
 :leave
 set buildIndex=0
