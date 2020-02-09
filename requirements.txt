@@ -1,3 +1,0 @@
---index-url https://github.com/jessek/
-
-hashdeep==4.4
