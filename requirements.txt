@@ -1,1 +1,3 @@
-https://github.com/jessek/hashdeep 
+--index-url https://github.com
+
+hashdeep==4.4
