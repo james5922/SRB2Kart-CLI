@@ -1,4 +1,4 @@
-# Kurzov's SRB2Kart Launcher
+# Kurzov's SRB2Kart Launcher - PRERELEASE 1
 # Launcher Copyright (C)      2020 by James 'Kurzov' Mills
 # SRB2Kart Copyright (C) 1998-2018 by Kart Krew & Sonic Team Junior
 # THIS PROGRAM COMES WITH NO WARRANTY, BE IT IMPLIED OR EXPLICIT. USE AT YOUR OWN RISK.
@@ -6,49 +6,78 @@
 import os
 import subprocess
 
-# Default options, will be externally read when I figure out how to read files.
-hyuuseekerenabled = False
-# hyuuseekerenabled help:
-#	False: HyuuSeeker support is disabled
-#	True: HyuuSeeker support is enabled
-x32bitdir = "C:/USERS/KURZOV/DOWNLOADS/KART-X86"
-# definition of directory where 32bit executables are located
-x64bitdir = "C:/USERS/KURZOV/DOWNLOADS/KART-X64"
-# definition of directory where 64bit executables are located
+from configparser import ConfigParser
+config = ConfigParser()
+
+config.read('settings.ini')
+hyuuseekerenabled = config['settings']['hyuuseekersupport']
+kartinstall1 = config['paths']['kartinstall1']
+kartinstall2 = config['paths']['kartinstall2']
+kartinstall3 = config['paths']['kartinstall3']
+kartinstall4 = config['paths']['kartinstall4']
+kartinstall5 = config['paths']['kartinstall5']
+print("ready")
+
 
 EXEnum = 0 # global var
 EXEcount = 0 # global var
 menuLoadedCount = 1 # global var
 availableexes = []
 availablefilenames = []
-available64exes = []
-available64filenames = []
 allbuilds = {}
 
 def i_am_a_build(chksm, filepath):
     allbuilds[chksm] = filepath
 
+
+
 def lookforexecutables():
-    for filename in os.listdir(x32bitdir):
-        if filename.endswith(".exe"):
-            global EXEnum
-            availableexes.append(x32bitdir + "/" + filename)
-            availablefilenames.append(filename)
-            EXEnum += 1
-            continue
-        else:
-            continue
-    for filename in os.listdir(x64bitdir):
-        if filename.endswith(".exe"):
-            available64exes.append(x64bitdir + "/" + filename)
-            available64filenames.append(filename)
-            EXEnum += 1
-            continue
-        else:
-            continue
-    else:    
-        availableexes.extend(available64exes)
-        availablefilenames.extend(available64filenames)
+    if kartinstall1 != '':
+        for filename in os.listdir(kartinstall1):
+            if filename.endswith(".exe"):
+                global EXEnum
+                availableexes.append(kartinstall1 + "/" + filename)
+                availablefilenames.append(filename)
+                EXEnum += 1
+                continue
+            else:
+                continue
+    if kartinstall2 != '':
+        for filename in os.listdir(kartinstall2):
+            if filename.endswith(".exe"):
+                availableexes.append(kartinstall2 + "/" + filename)
+                availablefilenames.append(filename)
+                EXEnum += 1
+                continue
+            else:
+                continue
+    if kartinstall3 != '':
+        for filename in os.listdir(kartinstall3):
+            if filename.endswith(".exe"):
+                availableexes.append(kartinstall3 + "/" + filename)
+                availablefilenames.append(filename)
+                EXEnum += 1
+                continue
+            else:
+                continue
+    if kartinstall4 != '':
+        for filename in os.listdir(kartinstall4):
+            if filename.endswith(".exe"):
+                availableexes.append(kartinstall4 + "/" + filename)
+                availablefilenames.append(filename)
+                EXEnum += 1
+                continue
+            else:
+                continue
+    if kartinstall5 != '':
+        for filename in os.listdir(kartinstall5):
+            if filename.endswith(".exe"):
+                availableexes.append(kartinstall5 + "/" + filename)
+                availablefilenames.append(filename)
+                EXEnum += 1
+                continue
+            else:
+                continue
 
 def definemybuilds():
     for x in availableexes:
@@ -79,10 +108,14 @@ else:
     print("Build selected was: " + menuSelection)
     selectedBuild = availableexes[(int(menuSelection) - 1)]
     print("Selected build was: " + selectedBuild)
-    if selectedBuild not in available64exes:
-        os.chdir(x32bitdir)
-    else:
-        os.chdir(x64bitdir)
+    if selectedBuild not in available5exes:
+        os.chdir(kartinstall4)
+    elif selectedBuild not in available4exes:
+        os.chdir(kartinstall3)
+    elif selectedBuild not in available3exes:
+        os.chdir(kartinstall2)
+    elif selectedBuild not in available2exes:
+        os.chdir(kartinstall1)
     OGLSelection = input("Would you like to use OpenGL? [y/n] ")
     if OGLSelection[0] == 'y':
         renderMode = "OPENGL"
