@@ -6,3 +6,5 @@ The CLI depends on MD5DEEP, a checksum comparison tool. It can be obtained from 
 
 # Other Notes
 As this program is far from finished, I do not have any EXEs to run. For now, you will need to install Python and then run the launch-srb2kart.py file... however I do have plans to provide working executables later on, just not at this point.
+
+![Syntax Test](https://github.com/james5922/SRB2Kart-CLI/workflows/Syntax%20Test/badge.svg)
