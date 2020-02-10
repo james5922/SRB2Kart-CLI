@@ -23,6 +23,10 @@ EXEnum = 0 # global var
 EXEcount = 0 # global var
 menuLoadedCount = 1 # global var
 availableexes = []
+available2exes = []
+available3exes = []
+available4exes = []
+available5exes = []
 availablefilenames = []
 allbuilds = {}
 
@@ -45,7 +49,7 @@ def lookforexecutables():
     if kartinstall2 != '':
         for filename in os.listdir(kartinstall2):
             if filename.endswith(".exe"):
-                availableexes.append(kartinstall2 + "/" + filename)
+                available2exes.append(kartinstall2 + "/" + filename)
                 availablefilenames.append(filename)
                 EXEnum += 1
                 continue
@@ -54,7 +58,7 @@ def lookforexecutables():
     if kartinstall3 != '':
         for filename in os.listdir(kartinstall3):
             if filename.endswith(".exe"):
-                availableexes.append(kartinstall3 + "/" + filename)
+                available3exes.append(kartinstall3 + "/" + filename)
                 availablefilenames.append(filename)
                 EXEnum += 1
                 continue
@@ -63,7 +67,7 @@ def lookforexecutables():
     if kartinstall4 != '':
         for filename in os.listdir(kartinstall4):
             if filename.endswith(".exe"):
-                availableexes.append(kartinstall4 + "/" + filename)
+                available4exes.append(kartinstall4 + "/" + filename)
                 availablefilenames.append(filename)
                 EXEnum += 1
                 continue
@@ -72,12 +76,17 @@ def lookforexecutables():
     if kartinstall5 != '':
         for filename in os.listdir(kartinstall5):
             if filename.endswith(".exe"):
-                availableexes.append(kartinstall5 + "/" + filename)
+                available5exes.append(kartinstall5 + "/" + filename)
                 availablefilenames.append(filename)
                 EXEnum += 1
                 continue
             else:
                 continue
+    availableexes.extend(available2exes)
+    availableexes.extend(available3exes)
+    availableexes.extend(available4exes)
+    availableexes.extend(available5exes)
+    
 
 def definemybuilds():
     for x in availableexes:
@@ -96,25 +105,27 @@ def definemybuilds():
 
 lookforexecutables()
 definemybuilds()
-
+print("-----------------------------------------")
 print("Kurzov\'s SRB2Kart Command-Line Launcher")
+print("-----------------------------------------")
 for x, y in allbuilds.items():
     print(str(menuLoadedCount) + ": " + y + " (checksum " + x + ")")
     menuLoadedCount += 1
 else:
+    print("-------------------------------")
     menuSelection = input("Enter a build. ")
     if int(menuSelection) < 0 or int(menuSelection) >= menuLoadedCount:
         raise TypeError("Not a valid selection.")
     print("Build selected was: " + menuSelection)
     selectedBuild = availableexes[(int(menuSelection) - 1)]
     print("Selected build was: " + selectedBuild)
-    if selectedBuild not in available5exes:
+    if selectedBuild not in available5exes and kartinstall4 != '':
         os.chdir(kartinstall4)
-    elif selectedBuild not in available4exes:
+    elif selectedBuild not in available4exes and kartinstall3 != '':
         os.chdir(kartinstall3)
-    elif selectedBuild not in available3exes:
+    elif selectedBuild not in available3exes and kartinstall2 != '':
         os.chdir(kartinstall2)
-    elif selectedBuild not in available2exes:
+    elif selectedBuild not in available2exes and kartinstall1 != '':
         os.chdir(kartinstall1)
     OGLSelection = input("Would you like to use OpenGL? [y/n] ")
     if OGLSelection[0] == 'y':
